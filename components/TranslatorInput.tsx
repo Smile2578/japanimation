@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useTranslator } from '../context/translatorContext';
 import { translateText } from '../services/translationService';
 import { FormalityLevel } from '../context/translatorContext';
+import { Button } from './ui/button';
+import { AlertCircle } from 'lucide-react';
+
+// Constantes pour la limitation de l'input
+const MAX_INPUT_LENGTH = 500; // Limite de caractères pour l'input
+const INPUT_COOLDOWN_MS = 2000; // Temps de refroidissement entre les requêtes (2 secondes)
 
 const TranslatorInput: React.FC = () => {
   const {
@@ -22,9 +28,87 @@ const TranslatorInput: React.FC = () => {
 
   const [isTranslating, setIsTranslating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastTranslationTime, setLastTranslationTime] = useState<number>(0);
+  const [remainingCooldown, setRemainingCooldown] = useState<number>(0);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fonction pour valider le texte d'entrée
+  const validateInput = (text: string): { isValid: boolean; message: string | null } => {
+    // Vérifier la longueur maximale
+    if (text.length > MAX_INPUT_LENGTH) {
+      return { 
+        isValid: false, 
+        message: `Le texte ne doit pas dépasser ${MAX_INPUT_LENGTH} caractères.` 
+      };
+    }
+
+    // Vérifier les caractères spéciaux potentiellement dangereux (comme les tags HTML)
+    if (/<script|<iframe|javascript:/i.test(text)) {
+      return { 
+        isValid: false, 
+        message: "Le texte contient des caractères non autorisés." 
+      };
+    }
+
+    return { isValid: true, message: null };
+  };
+
+  // Gestion du timer de cooldown
+  useEffect(() => {
+    if (remainingCooldown > 0) {
+      cooldownTimerRef.current = setInterval(() => {
+        const newRemaining = Math.max(0, 
+          lastTranslationTime + INPUT_COOLDOWN_MS - Date.now());
+        setRemainingCooldown(newRemaining);
+        
+        if (newRemaining === 0 && cooldownTimerRef.current) {
+          clearInterval(cooldownTimerRef.current);
+        }
+      }, 100);
+    }
+
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+    };
+  }, [remainingCooldown, lastTranslationTime]);
+
+  // Gérer le changement de texte avec validation
+  const handleTextChange = (text: string) => {
+    const validation = validateInput(text);
+    
+    if (!validation.isValid) {
+      setErrorMessage(validation.message);
+    } else if (errorMessage && !/<script|<iframe|javascript:/i.test(text)) {
+      setErrorMessage(null);
+    }
+    
+    // Mettre à jour le texte même s'il y a une erreur de validation
+    // pour permettre à l'utilisateur de le corriger
+    setInputText(text);
+  };
 
   // Fonction pour gérer la traduction
   const handleTranslate = async () => {
+    // Vérifier le refroidissement entre les requêtes
+    const now = Date.now();
+    const timeSinceLastTranslation = now - lastTranslationTime;
+    
+    if (timeSinceLastTranslation < INPUT_COOLDOWN_MS) {
+      const cooldownRemaining = INPUT_COOLDOWN_MS - timeSinceLastTranslation;
+      setRemainingCooldown(cooldownRemaining);
+      setErrorMessage(`Veuillez attendre ${Math.ceil(cooldownRemaining / 1000)} secondes avant de traduire à nouveau.`);
+      return;
+    }
+
+    // Valider l'entrée avant de traduire
+    const validation = validateInput(inputText);
+    if (!validation.isValid) {
+      setErrorMessage(validation.message);
+      return;
+    }
+
     if (!inputText.trim() || isTranslating || isAnimating) return;
 
     setIsTranslating(true);
@@ -49,6 +133,10 @@ const TranslatorInput: React.FC = () => {
         inputLanguage,
         formalityLevel
       );
+      
+      // Mettre à jour le timestamp de dernière traduction
+      setLastTranslationTime(Date.now());
+      
       setTranslatedText(result);
       
       // Démarrer automatiquement l'animation
@@ -78,13 +166,13 @@ const TranslatorInput: React.FC = () => {
                 <SelectValue placeholder="Langue d'entrée" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Détection automatique</SelectItem>
+                <SelectItem value="auto">Automatique</SelectItem>
                 <SelectItem value="ja">Japonais</SelectItem>
                 <SelectItem value="fr">Français</SelectItem>
                 <SelectItem value="en">Anglais</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select
               value={formalityLevel}
               onValueChange={(value) => setFormalityLevel(value as FormalityLevel)}
@@ -100,53 +188,36 @@ const TranslatorInput: React.FC = () => {
             </Select>
           </div>
         </div>
-        
+
         <Textarea
-          placeholder="Entrez votre texte ici..."
           value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          className="min-h-[120px] resize-y bg-secondary text-foreground text-base md:text-lg p-3 md:p-4 border-none focus:ring-primary"
+          onChange={(e) => handleTextChange(e.target.value)}
+          placeholder="Entrez votre texte ici..."
+          className="min-h-[120px] md:min-h-[150px] resize-y"
+          maxLength={MAX_INPUT_LENGTH}
         />
         
+        {/* Compteur de caractères */}
+        <div className="text-xs text-muted-foreground text-right">
+          {inputText.length}/{MAX_INPUT_LENGTH} caractères
+        </div>
+
         {errorMessage && (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm md:text-base">
-            {errorMessage}
+          <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-md flex items-center gap-2">
+            <AlertCircle size={16} />
+            <span>{errorMessage}</span>
           </div>
         )}
-        
-        <button
+
+        <Button
           onClick={handleTranslate}
-          disabled={!inputText.trim() || isTranslating || isAnimating}
-          className="button-primary w-full py-2 md:py-3 rounded-lg text-white font-medium transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isTranslating || isAnimating || !inputText.trim() || !!errorMessage || remainingCooldown > 0}
+          className="w-full"
         >
-          {isTranslating ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Traduction en cours...
-            </span>
-          ) : (
-            'Traduire et animer'
-          )}
-        </button>
+          {isTranslating ? 'Traduction en cours...' : remainingCooldown > 0 
+            ? `Attendre (${Math.ceil(remainingCooldown / 1000)}s)` 
+            : 'Traduire'}
+        </Button>
       </div>
     </div>
   );

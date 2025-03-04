@@ -460,25 +460,53 @@ export const translateText = async (
       },
       body: JSON.stringify(requestBody),
     });
-    
+
+    // Vérifier le statut de la réponse
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la traduction');
+      
+      // Gestion spécifique des erreurs de rate limiting
+      if (response.status === 429) {
+        throw new Error(`Limite de requêtes atteinte. ${errorData.message || 'Veuillez réessayer plus tard.'}`);
+      }
+      
+      // Autres erreurs d'API
+      throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    const translatedText = data.translatedText;
-    
+    console.log('Réponse de l\'API de traduction:', data);
+
+    // Si la langue cible est le japonais, créer un mapping avec romanisation
     if (targetLang === 'ja') {
-      // Si la cible est le japonais, créer le mapping avec romaji
-      console.log("Création du mapping japonais-romaji avec Claude...");
-      return await createJapaneseRomajiMapping(translatedText);
-    } else {
-      // Pour les autres langues, créer un mapping simple
-      return createTextMapping(translatedText);
+      // Obtenir la romanisation (romaji) depuis l'API
+      const translatedText = data.translatedText;
+      console.log('Texte traduit en japonais:', translatedText);
+      
+      try {
+        const textMapping = await createJapaneseRomajiMapping(translatedText);
+        console.log('Mapping japonais-romaji créé:', textMapping);
+        return textMapping;
+      } catch (romajiError) {
+        console.error('Erreur lors de la romanisation:', romajiError);
+        // En cas d'échec de la romanisation, retourner un mapping simple sans romaji
+        return createTextMapping(translatedText);
+      }
     }
+    
+    // Pour les autres langues, créer un mapping simple
+    return createTextMapping(data.translatedText);
   } catch (error) {
     console.error('Erreur lors de la traduction:', error);
-    throw error;
+    
+    // Gestion d'erreurs réseau (par exemple, hors ligne)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
+    }
+    
+    // Rejet de l'erreur pour la gestion plus haut dans l'application
+    throw error instanceof Error 
+      ? error 
+      : new Error('Une erreur inattendue est survenue lors de la traduction');
   }
 }; 
