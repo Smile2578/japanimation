@@ -125,11 +125,23 @@
   }
   
   .char-container {
-    @apply opacity-0 scale-90 transition-all duration-200 ease-out inline-block;
+    display: inline-block;
+    position: relative;
+    transition: all 0.2s ease-in-out;
   }
   
   .char-container.active {
-    @apply opacity-100 scale-100;
+    opacity: 1;
+  }
+  
+  .char-container:not(.active) {
+    opacity: 0;
+  }
+  
+  .char-container.highlight {
+    background-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+    border-radius: 4px;
   }
   
   .highlight {
@@ -159,5 +171,44 @@
   
   .font-jp {
     font-family: var(--font-noto-jp), sans-serif;
+  }
+
+  .japanese-line {
+    line-height: 1.8;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  .phonetic-line {
+    line-height: 1.8;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  /* Réceptivité mobile */
+  @media (max-width: 640px) {
+    .japanese-line {
+      font-size: 1.25rem;
+      line-height: 1.6;
+    }
+    
+    .phonetic-line {
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+  }
+  
+  /* Design adaptatif pour les petits écrans */
+  @media (max-width: 480px) {
+    .text-content {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+  }
+  
+  /* Style personnalisé pour les boutons */
+  .button-primary {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 }

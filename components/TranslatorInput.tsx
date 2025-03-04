@@ -5,6 +5,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useTranslator } from '../context/translatorContext';
 import { translateText } from '../services/translationService';
+import { FormalityLevel } from '../context/translatorContext';
 
 const TranslatorInput: React.FC = () => {
   const {
@@ -12,6 +13,8 @@ const TranslatorInput: React.FC = () => {
     setInputText,
     inputLanguage,
     setInputLanguage,
+    formalityLevel,
+    setFormalityLevel,
     setTranslatedText,
     setIsAnimating,
     isAnimating,
@@ -39,8 +42,13 @@ const TranslatorInput: React.FC = () => {
         targetLang = 'ja';
       }
 
-      // Appel à l'API de traduction avec le texte d'entrée et la langue source
-      const result = await translateText(targetLang, inputText, inputLanguage);
+      // Appel à l'API de traduction avec le texte d'entrée, la langue source et le niveau de formalité
+      const result = await translateText(
+        targetLang, 
+        inputText, 
+        inputLanguage,
+        formalityLevel
+      );
       setTranslatedText(result);
       
       // Démarrer automatiquement l'animation
@@ -55,36 +63,53 @@ const TranslatorInput: React.FC = () => {
   };
 
   return (
-    <div className="bg-card rounded-xl p-6 mb-8 shadow-md">
-      <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-primary">
+    <div className="bg-card rounded-xl p-4 md:p-6 mb-4 md:mb-8 shadow-md">
+      <div className="flex flex-col space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-lg md:text-xl font-bold text-primary">
             Texte à traduire
           </h2>
-          <Select
-            value={inputLanguage}
-            onValueChange={(value) => setInputLanguage(value as 'auto' | 'ja' | 'fr' | 'en')}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Langue d'entrée" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Détection automatique</SelectItem>
-              <SelectItem value="ja">Japonais</SelectItem>
-              <SelectItem value="fr">Français</SelectItem>
-              <SelectItem value="en">Anglais</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select
+              value={inputLanguage}
+              onValueChange={(value) => setInputLanguage(value as 'auto' | 'ja' | 'fr' | 'en')}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Langue d'entrée" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Détection automatique</SelectItem>
+                <SelectItem value="ja">Japonais</SelectItem>
+                <SelectItem value="fr">Français</SelectItem>
+                <SelectItem value="en">Anglais</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={formalityLevel}
+              onValueChange={(value) => setFormalityLevel(value as FormalityLevel)}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Niveau de formalité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="formal">Formel</SelectItem>
+                <SelectItem value="neutral">Neutre</SelectItem>
+                <SelectItem value="casual">Familier</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        
         <Textarea
           placeholder="Entrez votre texte ici..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          className="min-h-[120px] resize-y bg-secondary text-foreground text-lg p-4 border-none focus:ring-primary"
+          className="min-h-[120px] resize-y bg-secondary text-foreground text-base md:text-lg p-3 md:p-4 border-none focus:ring-primary"
         />
         
         {errorMessage && (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-lg">
+          <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm md:text-base">
             {errorMessage}
           </div>
         )}
@@ -92,7 +117,7 @@ const TranslatorInput: React.FC = () => {
         <button
           onClick={handleTranslate}
           disabled={!inputText.trim() || isTranslating || isAnimating}
-          className="button-primary w-full"
+          className="button-primary w-full py-2 md:py-3 rounded-lg text-white font-medium transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isTranslating ? (
             <span className="flex items-center justify-center">

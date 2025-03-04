@@ -23,7 +23,9 @@ const TextChar: React.FC<TextCharProps> = ({
 }) => {
   return (
     <span
-      className={`char-container ${isActive ? 'active' : ''} ${isHighlighted ? 'highlight' : ''}`}
+      className={`char-container inline-block px-0.5 transition-all duration-200 ease-in-out ${
+        isActive ? 'opacity-100' : 'opacity-0'
+      } ${isHighlighted ? 'bg-primary/20 rounded text-primary font-bold' : ''}`}
       onMouseEnter={() => onMouseEnter(index)}
       onMouseLeave={onMouseLeave}
     >
@@ -63,6 +65,35 @@ const TextDisplay: React.FC = () => {
     }
   };
 
+  // Fonction de débogage du mapping
+  const debugMapping = () => {
+    if (translatedText && translatedText.length > 0) {
+      console.log('==== DÉBOGAGE DU MAPPING DANS TEXT DISPLAY ====');
+      console.log('Nombre total de mappings:', translatedText.length);
+      
+      // Créer une représentation visuelle du mapping
+      const japaneseText = translatedText.map(item => item.japanese).join('');
+      const phoneticText = translatedText.map(item => item.phonetic).join('');
+      
+      console.log('Texte japonais complet:', japaneseText);
+      console.log('Texte phonétique complet:', phoneticText);
+      
+      // Afficher le tableau d'alignement pour visualiser la correspondance
+      console.log('Tableau d\'alignement:');
+      const alignmentTable = [];
+      for (let i = 0; i < translatedText.length; i++) {
+        alignmentTable.push({
+          index: i,
+          jap: translatedText[i].japanese,
+          rom: translatedText[i].phonetic,
+          unicode: translatedText[i].japanese.charCodeAt(0).toString(16)
+        });
+      }
+      console.table(alignmentTable);
+      console.log('==== FIN DU DÉBOGAGE DU MAPPING ====');
+    }
+  };
+
   // Gestion de l'animation
   useEffect(() => {
     if (!isAnimating || !translatedText.length) return;
@@ -70,6 +101,9 @@ const TextDisplay: React.FC = () => {
     // Réinitialiser l'état avant de commencer une nouvelle animation
     setVisibleChars(0);
     setCurrentHighlightIndex(null);
+    
+    // Déboguer le mapping au début de l'animation
+    debugMapping();
     
     let charIndex = 0;
     const totalChars = translatedText.length;
@@ -158,12 +192,12 @@ const TextDisplay: React.FC = () => {
   };
 
   return (
-    <div className="text-display">
-      <div className="text-content" ref={textContentRef}>
+    <div className="text-display flex flex-col w-full max-w-full overflow-hidden">
+      <div className="text-content relative bg-card rounded-xl p-4 md:p-6 shadow-md w-full overflow-auto" ref={textContentRef}>
         {translatedText.length > 0 ? (
           <>
             {/* Ligne japonaise */}
-            <div className="japanese-line">
+            <div className="japanese-line mb-4 text-xl md:text-2xl lg:text-3xl font-medium leading-loose break-all">
               {translatedText.map((item, index) => (
                 <TextChar
                   key={`jp-${index}`}
@@ -178,11 +212,11 @@ const TextDisplay: React.FC = () => {
             </div>
 
             {/* Ligne phonétique */}
-            <div className="phonetic-line">
+            <div className="phonetic-line text-sm md:text-base lg:text-lg text-muted-foreground leading-loose break-all">
               {translatedText.map((item, index) => (
                 <TextChar
                   key={`ph-${index}`}
-                  char={item.phonetic}
+                  char={item.phonetic || '?'}
                   isActive={index < visibleChars}
                   isHighlighted={currentHighlightIndex === index}
                   index={index}
@@ -191,30 +225,45 @@ const TextDisplay: React.FC = () => {
                 />
               ))}
             </div>
+            
+            {/* Message d'information sur la phonétique */}
+            {translatedText.some(item => item.phonetic === '[?]') ? (
+              <div className="mt-2 text-xs text-amber-500 dark:text-amber-400">
+                Note: Certains caractères ne peuvent pas être romanisés avec le dictionnaire. Utilisation du mode de secours.
+              </div>
+            ) : translatedText.some(item => !item.phonetic || item.phonetic === '?') ? (
+              <div className="mt-2 text-xs text-amber-500 dark:text-amber-400">
+                Note: Romanisation limitée pour certains caractères.
+              </div>
+            ) : (
+              <div className="mt-2 text-xs text-emerald-500 dark:text-emerald-400">
+                Phonétique fournie par Claude AI
+              </div>
+            )}
           </>
         ) : (
-          <div className="text-center text-muted-foreground">
+          <div className="text-center text-muted-foreground py-10">
             <p>Le texte traduit apparaîtra ici</p>
           </div>
         )}
       </div>
 
       {/* Contrôles */}
-      <div className="flex justify-center mt-6 gap-4">
+      <div className="flex flex-wrap justify-center mt-4 gap-2 md:gap-4">
         <Button
           onClick={speakJapanese}
           disabled={isSpeaking || !translatedText.length}
-          className="button-primary"
+          className="button-primary w-full sm:w-auto"
         >
           {isSpeaking ? (
-            <span className="flex items-center">
+            <span className="flex items-center justify-center">
               <span className="h-2 w-2 mr-2 rounded-full bg-white relative overflow-hidden">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
               </span>
               Lecture...
             </span>
           ) : (
-            <span className="flex items-center">
+            <span className="flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -235,9 +284,9 @@ const TextDisplay: React.FC = () => {
         <Button
           onClick={startAnimation}
           disabled={isAnimating || !translatedText.length}
-          className="button-primary"
+          className="button-primary w-full sm:w-auto"
         >
-          <span className="flex items-center">
+          <span className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"

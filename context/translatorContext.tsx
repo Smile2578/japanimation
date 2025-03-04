@@ -8,13 +8,27 @@ export interface TextMapping {
   index: number;
 }
 
-interface TranslatorContextType {
+export type FormalityLevel = 'formal' | 'neutral' | 'casual';
+
+export interface TranslatorContextType {
   inputText: string;
   setInputText: (text: string) => void;
   translatedText: TextMapping[];
-  setTranslatedText: (mappings: TextMapping[]) => void;
+  setTranslatedText: (translatedText: TextMapping[]) => void;
+  isAnimating: boolean;
+  setIsAnimating: (isAnimating: boolean) => void;
+  visibleChars: number;
+  setVisibleChars: (visibleChars: number) => void;
   inputLanguage: 'auto' | 'ja' | 'fr' | 'en';
   setInputLanguage: (lang: 'auto' | 'ja' | 'fr' | 'en') => void;
+  formalityLevel: FormalityLevel;
+  setFormalityLevel: (level: FormalityLevel) => void;
+  isTranslating: boolean;
+  setIsTranslating: (isTranslating: boolean) => void;
+  errorMessage: string | null;
+  setErrorMessage: (error: string | null) => void;
+  dictionaryWarning: boolean;
+  setDictionaryWarning: (warning: boolean) => void;
   charSpeed: number;
   setCharSpeed: (speed: number) => void;
   highlightDuration: number;
@@ -23,8 +37,6 @@ interface TranslatorContextType {
   setTtsSpeed: (speed: number) => void;
   isDarkTheme: boolean;
   setIsDarkTheme: (isDark: boolean) => void;
-  isAnimating: boolean;
-  setIsAnimating: (isAnimating: boolean) => void;
   isSpeaking: boolean;
   setIsSpeaking: (isSpeaking: boolean) => void;
   currentHighlightIndex: number | null;
@@ -42,12 +54,17 @@ interface TranslatorProviderProps {
 export const TranslatorProvider = ({ children }: TranslatorProviderProps) => {
   const [inputText, setInputText] = useState<string>('');
   const [translatedText, setTranslatedText] = useState<TextMapping[]>([]);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [visibleChars, setVisibleChars] = useState<number>(0);
   const [inputLanguage, setInputLanguage] = useState<'auto' | 'ja' | 'fr' | 'en'>('auto');
+  const [formalityLevel, setFormalityLevel] = useState<FormalityLevel>('neutral');
+  const [isTranslating, setIsTranslating] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [dictionaryWarning, setDictionaryWarning] = useState<boolean>(false);
   const [charSpeed, setCharSpeed] = useState<number>(100);
   const [highlightDuration, setHighlightDuration] = useState<number>(300);
   const [ttsSpeed, setTtsSpeed] = useState<number>(1);
   const [isDarkTheme, setIsDarkTheme] = useState<boolean>(true);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [currentHighlightIndex, setCurrentHighlightIndex] = useState<number | null>(null);
 
@@ -78,6 +95,11 @@ export const TranslatorProvider = ({ children }: TranslatorProviderProps) => {
     if (savedInputLanguage) {
       setInputLanguage(savedInputLanguage as 'auto' | 'ja' | 'fr' | 'en');
     }
+    
+    const savedFormalityLevel = localStorage.getItem('formalityLevel');
+    if (savedFormalityLevel) {
+      setFormalityLevel(savedFormalityLevel as FormalityLevel);
+    }
   };
 
   const saveUserPreferences = () => {
@@ -88,6 +110,7 @@ export const TranslatorProvider = ({ children }: TranslatorProviderProps) => {
     localStorage.setItem('highlightDuration', highlightDuration.toString());
     localStorage.setItem('ttsSpeed', ttsSpeed.toString());
     localStorage.setItem('inputLanguage', inputLanguage);
+    localStorage.setItem('formalityLevel', formalityLevel);
   };
 
   useEffect(() => {
@@ -108,8 +131,20 @@ export const TranslatorProvider = ({ children }: TranslatorProviderProps) => {
     setInputText,
     translatedText,
     setTranslatedText,
+    isAnimating,
+    setIsAnimating,
+    visibleChars,
+    setVisibleChars,
     inputLanguage,
     setInputLanguage,
+    formalityLevel,
+    setFormalityLevel,
+    isTranslating,
+    setIsTranslating,
+    errorMessage,
+    setErrorMessage,
+    dictionaryWarning,
+    setDictionaryWarning,
     charSpeed,
     setCharSpeed,
     highlightDuration,
@@ -118,8 +153,6 @@ export const TranslatorProvider = ({ children }: TranslatorProviderProps) => {
     setTtsSpeed,
     isDarkTheme,
     setIsDarkTheme,
-    isAnimating,
-    setIsAnimating,
     isSpeaking,
     setIsSpeaking,
     currentHighlightIndex,
