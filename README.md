@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Traducteur Japonais Interactif
 
-## Getting Started
+Une application Next.js pour l'apprentissage du japonais avec des animations interactives et une traduction alimentée par Claude d'Anthropic.
 
-First, run the development server:
+## Fonctionnalités
+
+- Traduction entre le japonais, le français et l'anglais
+- Animations des caractères japonais et de leur prononciation
+- Synthèse vocale pour la prononciation japonaise
+- Design moderne et responsive
+
+## Configuration
+
+### Prérequis
+
+- Node.js 18.0.0 ou supérieur
+- Une clé API Anthropic pour Claude
+
+### Installation
+
+1. Clonez ce dépôt
+2. Installez les dépendances:
+
+```bash
+npm install
+# ou
+yarn install
+# ou
+pnpm install
+```
+
+### Configuration de l'API Anthropic
+
+Pour utiliser la fonctionnalité de traduction, vous avez besoin d'une clé API Anthropic:
+
+1. Créez un compte sur [Anthropic](https://www.anthropic.com/) et obtenez une clé API
+2. Copiez le fichier `.env.local.example` en `.env.local`
+3. Remplacez `votre_clé_api_anthropic` par votre clé API réelle
+
+```
+ANTHROPIC_API_KEY=votre_clé_api_anthropic
+```
+
+## Développement
+
+Lancez le serveur de développement:
 
 ```bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
+# ou
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrez [http://localhost:3000](http://localhost:3000) avec votre navigateur pour voir l'application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies utilisées
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 14 avec App Router
+- TypeScript
+- Tailwind CSS
+- Kuroshiro pour la romanisation du japonais
+- API Claude d'Anthropic pour la traduction
+- ShadCN UI pour les composants d'interface
 
-## Learn More
+## Déploiement
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+L'application peut être déployée sur Vercel ou toute autre plateforme supportant Next.js.

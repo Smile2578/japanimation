@@ -1,26 +1,163 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-jp: var(--font-noto-jp);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: #ffffff;
+  --foreground: #121212;
+  --card: #ffffff;
+  --card-foreground: #121212;
+  --popover: #ffffff;
+  --popover-foreground: #121212;
+  --primary: #e94560;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #121212;
+  --muted: #f5f5f5;
+  --muted-foreground: #6b7280;
+  --accent: #a2a8d3;
+  --accent-foreground: #121212;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #e94560;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: #1a1a2e;
+  --foreground: #ffffff;
+  --card: #16213e;
+  --card-foreground: #ffffff;
+  --popover: #16213e;
+  --popover-foreground: #ffffff;
+  --primary: #e94560;
+  --primary-foreground: #ffffff;
+  --secondary: #0f3460;
+  --secondary-foreground: #ffffff;
+  --muted: #0f3460;
+  --muted-foreground: #a2a8d3;
+  --accent: #a2a8d3;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #0f3460;
+  --input: #0f3460;
+  --ring: #e94560;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .container-custom {
+    @apply bg-card rounded-2xl shadow-lg p-8 w-full max-w-4xl mx-auto;
+  }
+  
+  .text-display {
+    @apply bg-secondary rounded-xl p-8 mb-8 relative overflow-hidden shadow-inner;
+    min-height: 200px;
+  }
+  
+  .text-display::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-[1px];
+    background: linear-gradient(90deg, transparent, rgba(233, 69, 96, 0.5), transparent);
+    animation: scan 3s linear infinite;
+  }
+  
+  @keyframes scan {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+  
+  .text-content {
+    @apply flex flex-col items-center justify-center min-h-[200px] gap-6;
+  }
+  
+  .japanese-line, .phonetic-line {
+    @apply flex flex-row flex-wrap justify-center w-full;
+  }
+  
+  .japanese-line {
+    @apply text-4xl leading-relaxed font-jp;
+  }
+  
+  .phonetic-line {
+    @apply text-2xl text-muted-foreground;
+  }
+  
+  .char-container {
+    @apply opacity-0 scale-90 transition-all duration-200 ease-out inline-block;
+  }
+  
+  .char-container.active {
+    @apply opacity-100 scale-100;
+  }
+  
+  .highlight {
+    @apply text-primary shadow-lg brightness-110;
+    filter: drop-shadow(0 0 0.5rem rgba(233, 69, 96, 0.5));
+  }
+  
+  .control-group {
+    @apply flex flex-col items-center;
+  }
+  
+  .control-label {
+    @apply mb-3 text-muted-foreground font-medium text-sm;
+  }
+  
+  .button-primary {
+    @apply bg-primary text-primary-foreground border-none px-6 py-3 text-base rounded-lg cursor-pointer transition-all duration-300 font-semibold shadow-md relative overflow-hidden;
+  }
+  
+  .button-primary:hover {
+    @apply transform -translate-y-1 shadow-lg;
+  }
+  
+  .button-primary:disabled {
+    @apply bg-muted transform-none shadow-none cursor-not-allowed;
+  }
+  
+  .font-jp {
+    font-family: var(--font-noto-jp), sans-serif;
+  }
 }
